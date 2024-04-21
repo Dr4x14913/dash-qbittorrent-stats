@@ -1,0 +1,65 @@
+version: '3'
+
+networks:
+  datastream:
+
+volumes:
+  mysql:
+
+services:
+  db:
+    # image: mariadb:latest
+    build:
+      context: .
+      dockerfile: mariadb.Dockerfile
+    volumes:
+      - mysql:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password # replace with your password
+      MYSQL_DATABASE: website
+      MYSQL_USER: user  # replace with your username
+      MYSQL_PASSWORD: password  # replace with your password
+    ports:
+      - "3307:3306"
+    networks:
+      - datastream
+    healthcheck:
+      test: ["CMD-SHELL", "mariadb -uroot -proot_password -e 'use website;'"]
+      interval: 30s
+      timeout: 15s
+      retries: 5
+      start_period: 30s
+
+  app:
+    build:
+      context: .
+      dockerfile: python.Dockerfile
+    ports:
+      - "8050:8050"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - datastream
+
+  scheduler:
+    build:
+      context: .
+      dockerfile: scheduler.Dockerfile
+    restart: always
+    environment:
+      QB_HOST:
+      QB_PORT:
+      QB_USER:
+      QB_PASS:
+      MYSQL_DATABASE: website
+      MYSQL_USER: user  # replace with your username
+      MYSQL_PASSWORD: password  # replace with your password
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ${PWD}/db_sauv/:/home/db_sauv:shared
+    networks:
+      - datastream
