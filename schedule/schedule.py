@@ -14,7 +14,7 @@ def fetch_and_store():
     for torrent in torrents:
         req = f"""REPLACE INTO torrent_data (name, uploaded, ratio, size, day) VALUES (
             '{torrent.name}', '{torrent.uploaded/(1024*1024)}', '{round(torrent.ratio*100,3)}%', '{torrent.size}', '{day}' )
-        )"""
+        """
         db.insert(req)
     db.close()
     print("Data fetched", flush=True)
