@@ -9,6 +9,6 @@ CREATE TABLE `torrent_data` (
   `ratio`     varchar(256),
   `size` varchar(256),
   `day`       varchar(30),
-  PRIMARY KEY (`name`)
+  PRIMARY KEY (`name`, `day`)
 ) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 

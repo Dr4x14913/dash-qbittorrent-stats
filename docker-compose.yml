@@ -33,6 +33,10 @@ services:
     build:
       context: .
       dockerfile: python.Dockerfile
+    environment:
+      MYSQL_DATABASE: website
+      MYSQL_USER: user  # replace with your username
+      MYSQL_PASSWORD: password  # replace with your password
     ports:
       - "8050:8050"
     depends_on:
