@@ -4,9 +4,9 @@ FROM python:latest
 RUN pip install mysql-connector-python qbittorrent-api apscheduler pandas
 
 # Copy local code to the container image.
-COPY ./schedule /schedule
+COPY ./scheduler /scheduler
 
 # Define working directory in the container
-WORKDIR /schedule
+WORKDIR /scheduler
 
-CMD ["python", "schedule.py"]
+CMD ["python", "scheduler.py"]
