@@ -1,9 +1,14 @@
 #! /usr/bin/python3
 import qbittorrentapi
 import os
+import re
 from apscheduler.schedulers.blocking import BlockingScheduler
 from sql import Sql
 from datetime import date
+
+def clean_str(string):
+    normal_string =re.sub("[^A-Z0-9_\-\[\]\.(){} ]", "_",string,0,re.IGNORECASE)
+    return normal_string
 
 def fetch_and_store():
     print("Fetching data ...", flush=True)
@@ -12,8 +17,8 @@ def fetch_and_store():
 
     torrents = qbt_client.torrents_info()
     for torrent in torrents:
-        req = f"""REPLACE INTO torrent_data (name, uploaded, ratio, size, day) VALUES (
-            '{torrent.name}', '{torrent.uploaded/(1024*1024)}', '{round(torrent.ratio*100,3)}%', '{torrent.size}', '{day}' )
+        req = f"""REPLACE INTO torrent_data (name, uploaded, downloaded, ratio, size, day) VALUES (
+            '{clean_str(torrent.name)}', '{torrent.uploaded/(1024*1024)}', '{torrent.downloaded/(1024*1024)}','{round(torrent.ratio*100,3)}%', '{torrent.size}', '{day}' )
         """
         db.insert(req)
     db.close()

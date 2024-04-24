@@ -48,13 +48,11 @@ services:
       dockerfile: scheduler.Dockerfile
     restart: always
     environment:
-      QB_HOST:
-      QB_PORT:
-      QB_USER:
-      QB_PASS:
       MYSQL_DATABASE: website
       MYSQL_USER: user  # replace with your username
       MYSQL_PASSWORD: password  # replace with your password
+    env_file:
+      - .env
     depends_on:
       db:
         condition: service_healthy

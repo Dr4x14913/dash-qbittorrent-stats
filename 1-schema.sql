@@ -5,6 +5,7 @@ DROP TABLE IF EXISTS `torrent_data`;
 CREATE TABLE `torrent_data` (
   `name`      varchar(256),
   `uploaded`  varchar(256),
+  `downloaded`varchar(256),
   `ratio`     varchar(256),
   `size` varchar(256),
   `day`       varchar(30),
