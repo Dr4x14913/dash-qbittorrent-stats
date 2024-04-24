@@ -4,14 +4,18 @@ import os
 import re
 from apscheduler.schedulers.blocking import BlockingScheduler
 from sql import Sql
-from datetime import date
+from datetime import date, datetime
 
 def clean_str(string):
-    normal_string =re.sub("[^A-Z0-9_\-\[\]\.(){} ]", "_",string,0,re.IGNORECASE)
+    normal_string = re.sub(r"[^A-Z0-9_[\]\.(){} -]", "_",string,0,re.IGNORECASE)
     return normal_string
 
+def log(string):
+    time = datetime.now().strftime('%d/%m/%Y %H:%M:%S')
+    print(f"[{time}] {string}", flush=True)
+
 def fetch_and_store():
-    print("Fetching data ...", flush=True)
+    log("Fetching data ...")
     db  = Sql(os.getenv('MYSQL_DATABASE'))
     day = date.today().strftime('%d/%m/%Y')
 
@@ -22,7 +26,7 @@ def fetch_and_store():
         """
         db.insert(req)
     db.close()
-    print("Data fetched", flush=True)
+    log("Data fetched")
 
 
 #---------------------------------------------------------------------------------------------
@@ -36,15 +40,19 @@ qbt_client = qbittorrentapi.Client(
 try:
     qbt_client.auth_log_in()
 except qbittorrentapi.LoginFailed as e:
-    print(e)
+    print(f"Cannot login {e}")
+    exit(1)
 
-print("Scheduler started", flush=True)
+log("Initial fetch...")
+fetch_and_store()
+log("Initial fetch done")
+
+log("Scheduler started")
 scheduler = BlockingScheduler()
-scheduler.add_job(fetch_and_store, 'interval', seconds=10)
+scheduler.add_job(fetch_and_store, 'interval', hours=1)
 # scheduler.add_job(fetch_and_store, 'interval', minutes=1)
 
 try:
     scheduler.start()
 except KeyboardInterrupt:
     pass
-
