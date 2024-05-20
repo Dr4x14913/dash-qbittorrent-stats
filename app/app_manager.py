@@ -1,41 +1,46 @@
 from sql import Sql
 import pandas as pd
 
+def my_float(number):
+    try:
+        return float(number)
+    except Exception:
+        return 0
+
 def get_latest_date():
     db = Sql("website")
-    res = db.select("SELECT day FROM torrent_data GROUP BY day ORDER BY STR_TO_DATE(day, '%d/%m/%Y') DESC LIMIT 1")
+    res = db.select("SELECT day FROM torrents GROUP BY day ORDER BY STR_TO_DATE(day, '%d/%m/%Y') DESC LIMIT 1")
+    db.close()
     return res[0][0]
 
 def get_second_latest_date():
     db = Sql("website")
-    res = db.select("SELECT day FROM torrent_data GROUP BY day ORDER BY STR_TO_DATE(day, '%d/%m/%Y') DESC LIMIT 2")
+    res = db.select("SELECT day FROM torrents GROUP BY day ORDER BY STR_TO_DATE(day, '%d/%m/%Y') DESC LIMIT 2")
     return res[1][0]
 
 def get_torrent_list():
     cols          = ['name', 'ratio', 'downloaded', 'uploaded']
     db            = Sql("website")
-    latest        = db.select_to_df(f"SELECT  {', '.join(cols)} FROM torrent_data WHERE day='{get_latest_date()}'", cols)
-    second_latest = db.select_to_df(f"SELECT  {', '.join(cols)} FROM torrent_data WHERE day='{get_second_latest_date()}'", cols)
+    latest        = db.select_to_df(f"SELECT  {', '.join(cols)} FROM torrents WHERE day='{get_latest_date()}'", cols)
+    second_latest = db.select_to_df(f"SELECT  {', '.join(cols)} FROM torrents WHERE day='{get_second_latest_date()}'", cols)
     db.close()
     # print(latest.to_dict('index'), flush=True)
     # print(second_latest.to_dict('index'), flush=True)
     main_list = []
-
+    print(len(latest), len(second_latest), flush=True)
     for torrent in latest.to_dict('index').values():
+        print(torrent, flush=True)
         name         = torrent['name']
         ratio        = torrent['ratio']
-        downloaded_l = float(torrent['downloaded']) if torrent['downloaded'] is not None else 0
-        uploaded_l   = float(torrent['uploaded']) if torrent['uploaded'] is not None else 0
+        downloaded_l = my_float(torrent['downloaded'])
+        uploaded_l   = my_float(torrent['uploaded'])
 
         sl = second_latest.loc[second_latest['name'] == name].to_dict('list')
-        try:
-            downloaded_sl = float(sl['downloaded'][0])
-        except Exception:
-            downloaded_sl = 0
-        try:
-            uploaded_sl   = float(sl['uploaded'][0])
-        except Exception:
-            uploaded_sl   = 0
+        if len(sl['name']) == 0:
+            sl['downloaded'] = [0]
+            sl['uploaded']   = [0]
+        downloaded_sl = my_float(sl['downloaded'][0])
+        uploaded_sl   = my_float(sl['uploaded'][0])
 
         delta_up   = my_round(uploaded_l - uploaded_sl)
         delta_down = my_round(downloaded_l - downloaded_sl)

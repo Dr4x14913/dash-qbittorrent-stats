@@ -1,13 +1,15 @@
 #! /usr/bin/python3
-import os
-import mysql.connector
-import pandas as pd
 from sys import stderr
+import mysql.connector
+import os
+import pandas as pd
 
 class Sql:
-    def __init__(self, DB_NAME, DB_HOST='db', DB_SOCKET='', DB_USER=os.getenv('MYSQL_USER') , DB_PASS=os.getenv('MYSQL_PASSWORD') ):
+    def __init__(self, DB_NAME, DB_HOST=os.getenv('MYSQL_HOST'), DB_USER=os.getenv("MYSQL_USER"), DB_PASS=os.getenv("MYSQL_PASSWORD"), DB_SOCKET=''):
+        if DB_HOST is None: # Override host if not define .env file
+            DB_HOST = 'db'
         try:
-            if DB_HOST != '':
+            if DB_SOCKET == '':
                 self.mydb = mysql.connector.connect(
                     host=DB_HOST,
                     user=DB_USER,
@@ -23,13 +25,26 @@ class Sql:
                     )
 
         except Exception as e:
-            print("Connection to database failed !\n" + DB_NAME + f" is probably not a valid database...\n{e}", file=stderr)
+            print(f"Connection to database failed !\n{e}" , file=stderr)
             exit(1)
 
-    def select(self, request):
+    def select_one(self, request, dictionary=False):
+        """Execute an sql request on the chosen database and return the 1st result"""
+        try:
+            cursor = self.mydb.cursor(dictionary=dictionary)
+            cursor.execute(request)
+            result = cursor.fetchone()
+
+        except mysql.connector.Error as e:
+            error_msg = f"Sql request is:\n> {request}"
+            print(error_msg, file=stderr)
+            raise mysql.connector.Error(f"{e}:{error_msg}") from e
+        return result
+
+    def select(self, request, dictionary=False):
         """Execute an sql request on the chosen database and return the result"""
         try:
-            cursor = self.mydb.cursor()
+            cursor = self.mydb.cursor(dictionary=dictionary)
             cursor.execute(request)
             result = cursor.fetchall()
 
@@ -39,11 +54,16 @@ class Sql:
             raise mysql.connector.Error(f"{e}:{error_msg}") from e
         return result
 
-    def select_to_df(self, request, cols):
+    def select_to_df(self, request, cols=None):
         """Execute an sql request and return the result as a dataframe"""
         try:
-            lines = self.select(request)
-            df_res = pd.DataFrame(lines, columns=cols)
+            if cols is not None:
+                lines  = self.select(request)
+                df_res = pd.DataFrame(lines, columns=cols)
+            else:
+                lines  = self.select(request, dictionary=True)
+                df_res = pd.DataFrame(lines)
+
         except mysql.connector.Error as e:
             error_msg = f"Sql request is:\n> {request}"
             print(error_msg, file=stderr)

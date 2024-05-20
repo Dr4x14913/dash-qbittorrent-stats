@@ -1,10 +1,10 @@
 FROM python:latest
 
 # Install dependencies
-RUN pip install dash mysql-connector-python flask pandas gunicorn dash-bootstrap-components
+RUN pip install dash mysql-connector-python flask pandas gunicorn dash-ag-grid dash-bootstrap-components
 
 # Copy local code to the container image.
-COPY ./app /app
+# COPY ./app /app
 
 # Define working directory in the container
 WORKDIR /app

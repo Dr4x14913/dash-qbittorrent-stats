@@ -37,11 +37,14 @@ services:
       MYSQL_DATABASE: website
       MYSQL_USER: user  # replace with your username
       MYSQL_PASSWORD: password  # replace with your password
+      MYSQL_HOST: db
     ports:
       - "8050:8050"
     depends_on:
       db:
         condition: service_healthy
+    volumes:
+      - ${PWD}/app:/app
     networks:
       - datastream
 
